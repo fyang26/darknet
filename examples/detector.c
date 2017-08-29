@@ -628,7 +628,7 @@ void validate_detector_prec_recall(char *datacfg, char *cfgfile, char *weightfil
 	image sized = resize_image(orig, net.w, net.h);
 	char *id = basecfg(path);
 	network_predict(net, sized.data);
-	get_region_boxes(l, sized.w, sized.h, net.w, net.h, 0, probs[i], all_boxes[i], 0, 0, .5, 1);
+	get_region_boxes(l, sized.w, sized.h, net.w, net.h, 0, probs[i], all_boxes[i], 0, 0, 0, .5, 1);
 	if (nms) do_nms_obj(all_boxes[i], probs[i], l.w*l.h*l.n, classes, nms);
         
         free(id);
@@ -638,7 +638,7 @@ void validate_detector_prec_recall(char *datacfg, char *cfgfile, char *weightfil
 
     for(thresh = 0; thresh < 1; thresh = thresh + 0.01) {	
 	int total = 0;
-        int TP = 0, FP = 0;
+        int TP = 0;
         int detections = 0;
 	for(i = 0; i < m; ++i) {
 	    int num_labels = all_num_labels[i];
