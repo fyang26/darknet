@@ -567,18 +567,15 @@ void validate_detector_prec_recall(char *datacfg, char *cfgfile, char *weightfil
     list *options = read_data_cfg(datacfg);
     char *valid_images = option_find_str(options, "valid", "data/voc.2007.test");
 
-    network net = parse_network_cfg(cfgfile);
-    if(weightfile){
-        load_weights(&net, weightfile);
-    }
-    set_batch_network(&net, 1);
-    fprintf(stderr, "Learning Rate: %g, Momentum: %g, Decay: %g\n", net.learning_rate, net.momentum, net.decay);
+    network *net = load_network(cfgfile, weightfile, 0);
+    set_batch_network(net, 1);
+    fprintf(stderr, "Learning Rate: %g, Momentum: %g, Decay: %g\n", net->learning_rate, net->momentum, net->decay);
     srand(time(0));
 
     list *plist = get_paths(valid_images);
     char **paths = (char **)list_to_array(plist);
 
-    layer l = net.layers[net.n-1];
+    layer l = net->layers[net->n-1];
     int classes = l.classes;
 
     int i, j, k;
@@ -616,10 +613,10 @@ void validate_detector_prec_recall(char *datacfg, char *cfgfile, char *weightfil
     for(i = 0; i < m; ++i) {
         char *path = paths[i];
         image orig = load_image_color(path, 0, 0);
-        image sized = resize_image(orig, net.w, net.h);
+        image sized = resize_image(orig, net->w, net->h);
         char *id = basecfg(path);
         network_predict(net, sized.data);
-        get_region_boxes(l, sized.w, sized.h, net.w, net.h, 0, probs[i], all_boxes[i], 0, 0, 0, .5, 1);
+        get_region_boxes(l, sized.w, sized.h, net->w, net->h, 0, probs[i], all_boxes[i], 0, 0, 0, .5, 1);
         if (nms) do_nms_obj(all_boxes[i], probs[i], l.w*l.h*l.n, classes, nms);
         
         free(id);
