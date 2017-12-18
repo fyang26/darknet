@@ -593,14 +593,14 @@ void validate_detector_prec_recall(char *datacfg, char *cfgfile, char *weightfil
         probs[i] = calloc(l.w*l.h*l.n, sizeof(float *));
         
         char *path = paths[i];
-	char labelpath[4096];
-	find_replace(path, "images", "labels", labelpath);
-	find_replace(labelpath, "JPEGImages", "labels", labelpath);
-	find_replace(labelpath, ".png", ".txt", labelpath);
-	find_replace(labelpath, ".jpg", ".txt", labelpath);
-	find_replace(labelpath, ".JPEG", ".txt", labelpath);
+        char labelpath[4096];
+        find_replace(path, "images", "labels", labelpath);
+        find_replace(labelpath, "JPEGImages", "labels", labelpath);
+        find_replace(labelpath, ".png", ".txt", labelpath);
+        find_replace(labelpath, ".jpg", ".txt", labelpath);
+        find_replace(labelpath, ".JPEG", ".txt", labelpath);
 
-	int num_labels = 0;
+        int num_labels = 0;
         truth[i] = read_boxes(labelpath, &num_labels);
         all_num_labels[i] = num_labels;
 
@@ -615,24 +615,24 @@ void validate_detector_prec_recall(char *datacfg, char *cfgfile, char *weightfil
 
     for(i = 0; i < m; ++i) {
         char *path = paths[i];
-	image orig = load_image_color(path, 0, 0);
-	image sized = resize_image(orig, net.w, net.h);
-	char *id = basecfg(path);
-	network_predict(net, sized.data);
-	get_region_boxes(l, sized.w, sized.h, net.w, net.h, 0, probs[i], all_boxes[i], 0, 0, 0, .5, 1);
-	if (nms) do_nms_obj(all_boxes[i], probs[i], l.w*l.h*l.n, classes, nms);
+        image orig = load_image_color(path, 0, 0);
+        image sized = resize_image(orig, net.w, net.h);
+        char *id = basecfg(path);
+        network_predict(net, sized.data);
+        get_region_boxes(l, sized.w, sized.h, net.w, net.h, 0, probs[i], all_boxes[i], 0, 0, 0, .5, 1);
+        if (nms) do_nms_obj(all_boxes[i], probs[i], l.w*l.h*l.n, classes, nms);
         
         free(id);
-	free_image(orig);
-	free_image(sized);
+        free_image(orig);
+        free_image(sized);
     }
 
     for(thresh = 0; thresh < 1; thresh = thresh + 0.01) {	
-	int total = 0;
+        int total = 0;
         int TP = 0;
         int detections = 0;
-	for(i = 0; i < m; ++i) {
-	    int num_labels = all_num_labels[i];
+        for(i = 0; i < m; ++i) {
+            int num_labels = all_num_labels[i];
             total += num_labels;
             for(k = 0; k < l.w*l.h*l.n; ++k) {
                 int class = max_index(probs[i][k], classes);
@@ -640,20 +640,20 @@ void validate_detector_prec_recall(char *datacfg, char *cfgfile, char *weightfil
                 if(prob > thresh) {
                     ++detections;
                     float best_iou = 0;
-		    for (j = 0; j < num_labels; ++j) {
-			box t = {truth[i][j].x, truth[i][j].y, truth[i][j].w, truth[i][j].h};
-			float iou = box_iou(all_boxes[i][k], t);
-			if(iou > best_iou && truth[i][j].id == class) {
-			    best_iou = iou;
-			}
+                    for (j = 0; j < num_labels; ++j) {
+                        box t = {truth[i][j].x, truth[i][j].y, truth[i][j].w, truth[i][j].h};
+                        float iou = box_iou(all_boxes[i][k], t);
+                        if(iou > best_iou && truth[i][j].id == class) {
+                            best_iou = iou;
+                        }
                     }
-		    if (best_iou > iou_thresh) {
-			++TP;
-		    }
-		}
-	    }
-	}
-	fprintf(stderr, "Thresh:%.4f\tRecall:%.2f%%\tPrecision:%.2f%%\n", thresh, 100.*TP/(total+1e-10), 100.*TP/(detections+1e-10));
+                    if (best_iou > iou_thresh) {
+                        ++TP;
+                    }
+                }
+             }
+        }
+        fprintf(stderr, "Thresh:%.4f\tRecall:%.2f%%\tPrecision:%.2f%%\n", thresh, 100.*TP/(total+1e-10), 100.*TP/(detections+1e-10));
     }
 }
 
